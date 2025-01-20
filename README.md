@@ -1,249 +1,139 @@
+Here’s a draft of the `README.md` file based on the contents of the uploaded documentation:
+
+```markdown
 # Éttermi Rendszer - Programozói Dokumentáció
 
-## 1. Fejlesztői Környezet és Projekt Felépítése
+## Tartalomjegyzék
+1. [Fejlesztői Környezet és Projekt Felépítése](#fejlesztői-környezet-és-projekt-felépítése)
+   - [Fejlesztői Környezet Követelmények](#fejlesztői-környezet-követelmények)
+   - [Fordítási Útmutató](#fordítási-útmutató)
+   - [Projekt Struktúra](#projekt-struktúra)
+2. [Adatszerkezetek és Tervezési Megfontolások](#adatszerkezetek-és-tervezési-megfontolások)
+   - [Központi Adatszerkezetek](#központi-adatszerkezetek)
+   - [Fájl Formátumok](#fájl-formátumok)
+3. [Függvény Dokumentáció](#függvény-dokumentáció)
+   - [Asztal Kezelő Függvények](#asztal-kezelő-függvények)
+   - [Rendelés Kezelő Függvények](#rendelés-kezelő-függvények)
+4. [Hibakezelési Stratégiák](#hibakezelési-stratégiák)
 
-### 1.1. Fejlesztői Környezet Követelmények
+---
 
-```
-Operációs rendszer: Linux vagy Windows
-Fordító: GCC 9.0 vagy újabb
-Szükséges fordítási paraméterek: -Wall -Werror
-Szükséges külső könyvtárak: debugmalloc.h (mellékelve)
-```
-### 1.2. Fordítási Útmutató
+## Fejlesztői Környezet és Projekt Felépítése
 
-```
-# Fordítás parancssorból
-gcc -Wall -Werror asztalfoglalas.c asztalkezelo.c asztalok.c file.c main.c menu.c
-rendelesek.c szamla.c terkep.c utils.c -o etterem
-```
-```
-# Debugmalloc használatával
-gcc -DMEMTRACE -Wall -Werror asztalfoglalas.c asztalkezelo.c asztalok.c file.c main.c menu.c
-rendelesek.c szamla.c terkep.c utils.c -o etterem
-```
-### 1.3. Projekt Struktúra
+### Fejlesztői Környezet Követelmények
+- **Operációs rendszer**: Linux vagy Windows
+- **Fordító**: GCC 9.0 vagy újabb
+- **Fordítási paraméterek**: `-Wall -Werror`
+- **Külső könyvtár**: `debugmalloc.h` (mellékelve)
 
-A projekt moduláris felépítésű, az alábbi fájlokkal:
+### Fordítási Útmutató
 
-```
-Főbb forrásfájlok és szerepük
-```
-```
-main.c/h
-Program belépési pont
-Főmenü implementáció
-Program állapot kezelése
-asztalok.c/h
-Asztalok kezelése láncolt listában
-Asztal foglalási logika
-Asztal pozícionálás és elrendezés
+#### Alapvető fordítás parancssorból:
+```bash
+gcc -Wall -Werror asztalfoglalas.c asztalkezelo.c asztalok.c file.c main.c menu.c rendelesek.c szamla.c terkep.c utils.c -o etterem
 ```
 
+#### Debugmalloc használatával:
+```bash
+gcc -DMEMTRACE -Wall -Werror asztalfoglalas.c asztalkezelo.c asztalok.c file.c main.c menu.c rendelesek.c szamla.c terkep.c utils.c -o etterem
 ```
-menu.c/h
-Étlap kezelése dinamikus adatszerkezetben
-Menüelemek hozzáadása/törlése
-Ár és név kezelés
-rendelesek.c/h
-Rendelések nyilvántartása
-Rendelési tételek kezelése
-Rendelés állapot követése
-file.c/h
-Adatok perzisztens tárolása
-Fájl műveletek és hibakezelés
-Bináris fájlformátum kezelése
-utils.c/h
-Általános segédfüggvények
-Input validáció
-Hibaüzenetek kezelése
-```
-## 2. Adatszerkezetek és Tervezési Megfontolások
 
-### 2.1. Központi Adatszerkezetek
+### Projekt Struktúra
+A projekt moduláris felépítésű, az alábbi főbb forrásfájlokkal:
 
-```
-Program Állapot
-```
-```
+| Fájl             | Szerep                                                         |
+|-------------------|---------------------------------------------------------------|
+| **main.c/h**      | Belépési pont, főmenü implementáció, program állapotkezelés    |
+| **asztalok.c/h**  | Asztalok kezelése láncolt listában, foglalási logika           |
+| **menu.c/h**      | Étlap dinamikus kezelése, elemek hozzáadása/törlése            |
+| **rendelesek.c/h**| Rendelések nyilvántartása, rendelési tételek kezelése          |
+| **file.c/h**      | Adatok tárolása, fájl műveletek és hibakezelés                |
+| **utils.c/h**     | Általános segédfüggvények, input validáció, hibaüzenetek      |
+
+---
+
+## Adatszerkezetek és Tervezési Megfontolások
+
+### Központi Adatszerkezetek
+#### Program Állapot
+```c
 typedef struct {
-AsztalLista* asztalok; // Dinamikus asztal nyilvántartás
-MenuLista* menu; // Dinamikus étlap kezelés
-RendelesLista* rendelesek; // Aktív rendelések
+    AsztalLista* asztalok;     // Dinamikus asztal nyilvántartás
+    MenuLista* menu;           // Dinamikus étlap kezelés
+    RendelesLista* rendelesek; // Aktív rendelések
 } ProgramAllapot;
 ```
-```
-Ez a struktúra a program központi állapottárolója. Tervezési megfontolások:
-```
-```
-Pointer típusú mezők a dinamikus memóriakezelés érdekében
-Moduláris felépítés - minden funkcionális egység külön kezelhető
-Egységbe zárt állapotkezelés - könnyű paraméterátadás
-```
 
-```
-Asztal Kezelés
-```
-```
+#### Asztal Kezelés
+```c
 typedef struct Asztal {
-int azonosito; // Egyedi azonosító
-int ferohely; // Ülőhelyek száma
-int x, y; // Pozíció a térképen
-int foglalt; // Foglaltsági állapot
-struct Asztal* kov; // Láncolt lista következő elem
+    int azonosito;           // Egyedi azonosító
+    int ferohely;            // Ülőhelyek száma
+    int x, y;                // Pozíció a térképen
+    int foglalt;             // Foglaltsági állapot
+    struct Asztal* kov;      // Láncolt lista következő elem
 } Asztal;
 ```
-```
-Tervezési megfontolások az asztalok kezeléséhez:
-```
-```
-Láncolt lista implementáció a dinamikus bővíthetőség érdekében
-Koordináta rendszer a vizuális megjelenítéshez
-Minimális memóriaigény - csak a szükséges adatok tárolása
-```
-```
-Menü Kezelés
-```
-```
+
+#### Menü Kezelés
+```c
 typedef struct MenuElem {
-char* nev; // Dinamikus karakterlánc
-int ar; // Egységár
-struct MenuElem* kov; // Következő menüelem
+    char* nev;               // Dinamikus karakterlánc
+    int ar;                  // Egységár
+    struct MenuElem* kov;    // Következő menüelem
 } MenuElem;
 ```
-```
-A menü kezelés tervezési szempontjai:
-```
-```
-Dinamikus karakterlánc a változó hosszúságú nevek miatt
-Láncolt lista a könnyű bővíthetőség érdekében
-Egyszerű árazási modell
-```
-### 2.2. Fájl Formátumok
 
-**asztalok.dat**
+### Fájl Formátumok
+- **asztalok.dat**
+  - Rekord méret: 17 byte
+  - [4 byte] azonosító, [4 byte] férőhely, [4 byte] x, [4 byte] y, [1 byte] foglalt állapot
+- **menu.dat**
+  - Változó hosszúságú rekordok
+  - [1 byte] név hossza, [n byte] név karakterei, [4 byte] ár
+- **rendelesek.dat**
+  - Változó méretű rekordok (tételek száma függvényében)
 
-```
-Rekord méret: 17 byte
-[4 byte] - azonosito (int)
-```
+---
 
-```
-[4 byte] - ferohely (int)
-[4 byte] - x koordináta (int)
-[4 byte] - y koordináta (int)
-[1 byte] - foglalt állapot (char)
-```
-**menu.dat**
+## Függvény Dokumentáció
 
-```
-Változó hosszúságú rekordok
-[1 byte] - név hossza (unsigned char)
-[n byte] - név karakterei
-[4 byte] - ár (int)
-```
-**rendelesek.dat**
-
-```
-Rekord mérete változó, a rendelési tételek számától függően.
-[4 byte] - asztal azonosító (int)
-[4 byte] - tétel száma (int)
-Tételek ismétlődő rekordjai:
-[4 byte] - étel azonosító (int)
-[4 byte] - mennyiség (int)
-```
-## 3. Függvény Dokumentáció
-
-### 3.1. Asztal Kezelő Függvények
-
-```
-asztalListaLetrehozas
-```
-```
+### Asztal Kezelő Függvények
+#### asztalListaLetrehozas
+```c
 AsztalLista* asztalListaLetrehozas(void);
 ```
-```
-Feladat: Új, üres asztal lista létrehozása
-```
-```
-Visszatérés: Az új lista pointere, vagy NULL hiba esetén
-```
-```
-Hibakezelés: Memória foglalási hiba esetén NULL visszatérés
-```
+- **Feladat**: Üres asztallista létrehozása.
+- **Visszatérés**: Az új lista pointere, vagy NULL hiba esetén.
 
-```
-asztalListaFelszabadit
-```
-```
+#### asztalListaFelszabadit
+```c
 void asztalListaFelszabadit(AsztalLista* lista);
 ```
-```
-Feladat: Asztal lista és minden elemének felszabadítása
-```
-```
-Paraméterek: lista - A felszabadítandó lista (nem lehet NULL)
-```
-```
-Mellékhatások: A lista és minden eleme felszabadításra kerül
-```
-### 3.2. Rendelés Kezelő Függvények
+- **Feladat**: Asztallista és elemei felszabadítása.
 
-```
-rendelesTetelHozzaad
-```
-```
+### Rendelés Kezelő Függvények
+#### rendelesTetelHozzaad
+```c
 int rendelesTetelHozzaad(Rendeles* rendeles, int menuElemAzonosito, int mennyiseg);
 ```
-```
-Feladat: Új tétel hozzáadása egy rendeléshez
-```
-```
-Paraméterek:
-```
-```
-rendeles - A rendelés, amihez hozzáadjuk (nem lehet NULL)
-menuElemAzonosito - A rendelt étel azonosítója
-mennyiseg - A rendelt mennyiség (pozitív egész)
-```
-```
-Visszatérés: 1 siker esetén, 0 hiba esetén
-```
-```
-Hibakezelés:
-```
-```
-NULL pointer ellenőrzés
-Érvénytelen azonosító ellenőrzése
-Memória foglalási hiba kezelése
-```
-## 4. Hibakezelési Stratégiák
+- **Feladat**: Új tétel hozzáadása egy rendeléshez.
+- **Visszatérés**: 1 siker, 0 hiba esetén.
 
-### 4.1. Általános Elvek
+---
 
+## Hibakezelési Stratégiák
 
-```
-Minden memóriafoglalás ellenőrzése
-Fájlműveletek hibakezelése
-NULL pointer ellenőrzések
-Érvénytelen paraméterek szűrése
-```
-### 4.2. Fájlkezelési Hibák
+### Általános Elvek
+- Memóriafoglalások ellenőrzése.
+- Fájlműveletek hibakezelése.
+- NULL pointer ellenőrzések.
 
-```
-Fájl megnyitási hibák kezelése
-Írási/olvasási műveletek ellenőrzése
-Fájl integritás ellenőrzése
-Automatikus fájl lezárás hiba esetén
-```
-### 4.3. Memóriakezelés
+### Memóriakezelés
+- **Debugmalloc használat**: Memóriaszivárgások és hibák detektálása.
+- Minden memória felszabadítása, double-free hibák elkerülése.
 
-A program a debugmalloc.h könyvtárat használja a memóriaszivárgások és hibák detektálására:
+---
 
-```
-Minden allokált memória felszabadításra kerül
-Double-free hibák elkerülése
-NULL pointerek kezelése
-Memóriaszivárgások detektálása
-```
-
+## További Információk
+A részletes implementációhoz kérjük, olvassa el a teljes programozói dokumentációt!
