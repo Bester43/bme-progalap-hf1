@@ -1,6 +1,3 @@
-Here’s a draft of the `README.md` file based on the contents of the uploaded documentation:
-
-```markdown
 # Éttermi Rendszer - Programozói Dokumentáció
 
 ## Tartalomjegyzék
